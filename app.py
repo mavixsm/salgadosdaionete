@@ -13,11 +13,15 @@ import urllib.request
 import urllib.parse
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cardapio.db'
+
+_db_url = os.environ.get('DATABASE_URL', 'sqlite:///cardapio.db')
+if _db_url.startswith('postgres://'):
+    _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
-app.secret_key = 'cardapio-chave-secreta-2025'
+app.secret_key = os.environ.get('SECRET_KEY', 'cardapio-chave-secreta-2025')
 
 ADMIN_SENHA = '6284'  # troque para a senha que quiser
 
