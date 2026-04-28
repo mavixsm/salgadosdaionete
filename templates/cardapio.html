@@ -1,0 +1,154 @@
+{% extends 'index.html' %}
+
+{% block titulo %}Cardápio de Salgados{% endblock %}
+
+{% block conteudo %}
+
+{% if aviso.ativo and aviso.texto %}
+<div id="modal-aviso">
+    <div class="aviso-box">
+        <div class="aviso-icone">📢</div>
+        <h3>Aviso</h3>
+        <p>{{ aviso.texto }}</p>
+        <button class="btn-fechar-aviso" onclick="fecharAviso()">Entendido!</button>
+    </div>
+</div>
+<script>
+    (function () {
+        const CHAVE = 'aviso_visto_{{ aviso.id }}_{{ aviso.texto|length }}';
+        if (!sessionStorage.getItem(CHAVE)) {
+            document.getElementById('modal-aviso').style.display = 'flex';
+        }
+    })();
+    function fecharAviso() {
+        document.getElementById('modal-aviso').style.display = 'none';
+        const CHAVE = 'aviso_visto_{{ aviso.id }}_{{ aviso.texto|length }}';
+        sessionStorage.setItem(CHAVE, '1');
+    }
+</script>
+{% endif %}
+
+<!-- ── PRODUTOS ── -->
+<h2 class="titulo-pagina">Nosso Cardápio</h2>
+
+{% if produtos %}
+<div class="grade-produtos">
+    {% for p in produtos %}
+    <div class="card-produto">
+
+        <a href="{{ url_for('produto', id=p.id) }}" class="card-img-link">
+            {% if p.imagem %}
+                <img src="{{ url_for('static', filename='uploads/' + p.imagem) }}" alt="{{ p.nome }}" class="card-img">
+            {% else %}
+                <div class="card-sem-img">Sem foto</div>
+            {% endif %}
+        </a>
+
+        <div class="card-body">
+            <span class="badge-cat">{{ p.categoria }}</span>
+            <a href="{{ url_for('produto', id=p.id) }}" class="card-nome-link">
+                <h3>{{ p.nome }}</h3>
+            </a>
+            {% if p.descricao %}<p>{{ p.descricao }}</p>{% endif %}
+
+            <div class="card-rodape">
+                <span class="preco">R$ {{ p.preco }}</span>
+                <div class="card-acoes">
+                    <div class="qtd-ctrl-card">
+                        <button class="qtd-btn" onclick="decrementarCard(this)">−</button>
+                        <span class="qtd-num">1</span>
+                        <button class="qtd-btn" onclick="incrementarCard(this)">+</button>
+                    </div>
+                    <button class="btn-add-cart"
+                        data-id="{{ p.id }}"
+                        data-nome="{{ p.nome }}"
+                        data-preco="{{ p.preco }}"
+                        data-imagem="{{ p.imagem or '' }}"
+                        onclick="addToCartFromCard(this)">
+                        Adicionar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+    <p class="vazio">Nenhum produto no cardápio ainda.</p>
+{% endif %}
+
+<!-- ── KITS ── -->
+<h2 class="titulo-pagina" style="margin-top: 48px">Kits Especiais</h2>
+<div class="grade-produtos">
+
+    <!-- Card fixo: Monte seu Kit -->
+    <div class="card-produto card-montar">
+        <a href="{{ url_for('montar_kit') }}" class="card-img-link">
+            <img src="{{ url_for('static', filename='img/kit-personalizado.jpg') }}"
+                 alt="Monte seu Kit" class="card-img card-montar-img">
+        </a>
+        <div class="card-body">
+            <span class="badge-montar">✨ Personalize</span>
+            <a href="{{ url_for('montar_kit') }}" class="card-nome-link">
+                <h3>Monte seu Kit</h3>
+            </a>
+            <p>Escolha os produtos e as quantidades que você quiser e monte seu próprio combo.</p>
+            <div class="card-rodape" style="border-top:1px solid #fde8e5; padding-top:12px; margin-top:10px;">
+                <a href="{{ url_for('montar_kit') }}" class="btn-montar-kit">Montar agora →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kits criados pelo admin -->
+    {% for k in kits %}
+    <div class="card-produto card-kit">
+
+        <a href="{{ url_for('kit_detalhe', id=k.id) }}" class="card-img-link">
+            {% if k.imagem %}
+                <img src="{{ url_for('static', filename='uploads/' + k.imagem) }}" alt="{{ k.nome }}" class="card-img">
+            {% else %}
+                <div class="card-sem-img">Sem foto</div>
+            {% endif %}
+        </a>
+
+        <div class="card-body">
+            <span class="badge-kit">Kit Especial</span>
+            <a href="{{ url_for('kit_detalhe', id=k.id) }}" class="card-nome-link">
+                <h3>{{ k.nome }}</h3>
+            </a>
+
+            {% if k.itens %}
+            <ul class="kit-resumo">
+                {% for item in k.itens %}
+                    <li>{{ item.quantidade }}× {{ item.produto.nome }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <div class="card-rodape">
+                <span class="preco">R$ {{ k.preco }}</span>
+                <div class="card-acoes">
+                    <div class="qtd-ctrl-card">
+                        <button class="qtd-btn" onclick="decrementarCard(this)">−</button>
+                        <span class="qtd-num">1</span>
+                        <button class="qtd-btn" onclick="incrementarCard(this)">+</button>
+                    </div>
+                    <button class="btn-add-cart"
+                        data-id="k{{ k.id }}"
+                        data-nome="{{ k.nome }}"
+                        data-preco="{{ k.preco }}"
+                        data-imagem="{{ k.imagem or '' }}"
+                        onclick="addToCartFromCard(this)">
+                        Adicionar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

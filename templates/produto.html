@@ -1,0 +1,52 @@
+{% extends 'index.html' %}
+
+{% block titulo %}{{ produto.nome }}{% endblock %}
+
+{% block conteudo %}
+<a href="{{ url_for('cardapio') }}" class="breadcrumb">← Voltar ao Cardápio</a>
+
+<div class="detalhe-wrapper">
+
+    <!-- Imagem -->
+    <div class="detalhe-img-box">
+        {% if produto.imagem %}
+            <img src="{{ url_for('static', filename='uploads/' + produto.imagem) }}"
+                 alt="{{ produto.nome }}" class="detalhe-img">
+        {% else %}
+            <div class="detalhe-sem-img">Sem foto</div>
+        {% endif %}
+    </div>
+
+    <!-- Informações -->
+    <div class="detalhe-info">
+        <span class="badge-cat">{{ produto.categoria }}</span>
+        <h1 class="detalhe-nome">{{ produto.nome }}</h1>
+
+        {% if produto.descricao %}
+            <p class="detalhe-descricao">{{ produto.descricao }}</p>
+        {% endif %}
+
+        <div class="detalhe-preco">R$ {{ produto.preco }}</div>
+
+        <!-- Seletor de quantidade -->
+        <div class="detalhe-qtd">
+            <button class="qtd-btn qtd-btn-lg" onclick="decrementarDetalhe()">−</button>
+            <span class="qtd-num qtd-num-lg" id="qtd-detalhe">1</span>
+            <button class="qtd-btn qtd-btn-lg" onclick="incrementarDetalhe()">+</button>
+        </div>
+
+        <!-- Botão adicionar -->
+        <button class="btn-add-detalhe"
+            data-id="{{ produto.id }}"
+            data-nome="{{ produto.nome }}"
+            data-preco="{{ produto.preco }}"
+            data-imagem="{{ produto.imagem or '' }}"
+            onclick="addToCartDetalhe(this)">
+            🛒 Adicionar ao Carrinho
+        </button>
+
+        <a href="{{ url_for('carrinho') }}" class="link-ver-carrinho">Ver meu carrinho →</a>
+    </div>
+
+</div>
+{% endblock %}

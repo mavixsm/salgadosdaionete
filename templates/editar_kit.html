@@ -1,0 +1,108 @@
+{% extends 'index.html' %}
+
+{% block titulo %}Editar Kit - {{ kit.nome }}{% endblock %}
+
+{% block conteudo %}
+<div class="form-container" style="max-width:680px">
+    <div class="form-titulo">
+        <h2>Editar Kit</h2>
+        <a href="{{ url_for('admin') }}" class="voltar">← Voltar</a>
+    </div>
+
+    <form method="POST" action="{{ url_for('editar_kit', id=kit.id) }}" enctype="multipart/form-data">
+
+        <div class="form-group">
+            <label for="nome">Nome do Kit *</label>
+            <input type="text" id="nome" name="nome" value="{{ kit.nome }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="preco">Preço do Kit (R$) *</label>
+            <input type="text" id="preco" name="preco" value="{{ kit.preco }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="descricao">Descrição</label>
+            <textarea id="descricao" name="descricao" rows="2">{{ kit.descricao or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Imagem do Kit</label>
+            {% if kit.imagem %}
+            <div class="imagem-atual">
+                <p class="hint">Imagem atual:</p>
+                <img src="{{ url_for('static', filename='uploads/' + kit.imagem) }}"
+                     alt="{{ kit.nome }}" class="preview-atual">
+                <p class="hint">Escolha um novo arquivo para substituir.</p>
+            </div>
+            {% endif %}
+            <input type="file" name="imagem" accept=".jpg,.jpeg,.png,.webp">
+            <span class="hint">PNG, JPG ou WEBP. Máximo 5MB.</span>
+        </div>
+
+        <div class="form-group form-check">
+            <input type="checkbox" id="visivel" name="visivel" {{ 'checked' if kit.visivel }}>
+            <label for="visivel">Mostrar no cardápio</label>
+        </div>
+
+        <!-- Seleção de produtos -->
+        <div class="kit-secao">
+            <h3 class="kit-secao-titulo">Produtos do Kit</h3>
+            <p class="hint" style="margin-bottom:12px">
+                Use <strong>−</strong> e <strong>+</strong> para ajustar. Quantidade 0 remove o produto do kit.
+            </p>
+
+            <div class="kit-produto-lista">
+                {% for p in produtos %}
+                {% set qtd_atual = qtds_atuais.get(p.id, 0) %}
+                <div class="kit-produto-row {{ 'kit-row-ativo' if qtd_atual > 0 }}">
+                    <div class="kit-prod-info">
+                        {% if p.imagem %}
+                            <img src="{{ url_for('static', filename='uploads/' + p.imagem) }}"
+                                 alt="{{ p.nome }}" class="kit-mini-thumb">
+                        {% else %}
+                            <div class="kit-mini-thumb kit-sem-foto"></div>
+                        {% endif %}
+                        <div>
+                            <strong>{{ p.nome }}</strong>
+                            <span class="kit-preco-ref">R$ {{ p.preco }}</span>
+                        </div>
+                    </div>
+                    <div class="kit-qtd-ctrl">
+                        <button type="button" class="qtd-btn" onclick="decrementarKit(this)">−</button>
+                        <input type="number" name="prod_{{ p.id }}" value="{{ qtd_atual }}" min="0"
+                               class="kit-qtd-input" readonly>
+                        <button type="button" class="qtd-btn" onclick="incrementarKit(this)">+</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('admin') }}" class="btn btn-cancelar">Cancelar</a>
+            <button type="submit" class="btn btn-salvar">Salvar Alterações</button>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    function incrementarKit(btn) {
+        const input = btn.closest('.kit-qtd-ctrl').querySelector('.kit-qtd-input');
+        input.value = parseInt(input.value) + 1;
+        atualizarDestaque(input);
+    }
+
+    function decrementarKit(btn) {
+        const input = btn.closest('.kit-qtd-ctrl').querySelector('.kit-qtd-input');
+        if (parseInt(input.value) > 0) input.value = parseInt(input.value) - 1;
+        atualizarDestaque(input);
+    }
+
+    function atualizarDestaque(input) {
+        const row = input.closest('.kit-produto-row');
+        row.classList.toggle('kit-row-ativo', parseInt(input.value) > 0);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends 'index.html' %}
+
+{% block titulo %}Monte seu Kit{% endblock %}
+
+{% block conteudo %}
+<div class="mk-topo">
+    <div>
+        <h2 class="titulo-pagina" style="margin-bottom:4px">🎁 Monte seu Kit</h2>
+        <p class="admin-sub">Escolha os produtos e as quantidades que você quer</p>
+    </div>
+    <a href="{{ url_for('cardapio') }}" class="breadcrumb">← Voltar ao Cardápio</a>
+</div>
+
+{% if produtos %}
+
+<div class="mk-lista">
+    {% for p in produtos %}
+    <div class="mk-item" id="mk-row-{{ p.id }}"
+         data-id="{{ p.id }}"
+         data-nome="{{ p.nome }}"
+         data-preco="{{ p.preco }}"
+         data-imagem="{{ p.imagem or '' }}">
+
+        {% if p.imagem %}
+            <img src="{{ url_for('static', filename='uploads/' + p.imagem) }}"
+                 alt="{{ p.nome }}" class="mk-thumb">
+        {% else %}
+            <div class="mk-thumb mk-sem-foto"></div>
+        {% endif %}
+
+        <div class="mk-info">
+            <strong>{{ p.nome }}</strong>
+            <span class="mk-cat">{{ p.categoria }}</span>
+            {% if p.descricao %}
+                <span class="mk-desc">{{ p.descricao }}</span>
+            {% endif %}
+        </div>
+
+        <div class="mk-preco-unit">R$ {{ p.preco }}<span>/un</span></div>
+
+        <div class="mk-controles">
+            <button type="button" class="qtd-btn" onclick="decrementarMk(this)">−</button>
+            <span class="qtd-num mk-qtd">0</span>
+            <button type="button" class="qtd-btn" onclick="incrementarMk(this)">+</button>
+        </div>
+
+        <div class="mk-subtotal" id="mk-sub-{{ p.id }}">—</div>
+
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Barra fixa inferior -->
+<div class="mk-barra" id="mk-barra">
+    <div class="mk-barra-info">
+        <span class="mk-barra-label">Total selecionado</span>
+        <strong class="mk-barra-total" id="mk-total">R$ 0,00</strong>
+    </div>
+    <div class="mk-barra-acoes">
+        <span class="mk-barra-itens" id="mk-itens-label"></span>
+        <button class="btn-mk-add" id="btn-mk-add" onclick="adicionarKitAoCarrinho()" disabled>
+            Adicionar ao Carrinho
+        </button>
+    </div>
+</div>
+
+{% else %}
+    <p class="vazio">Nenhum produto disponível ainda.</p>
+{% endif %}
+
+<script>
+const MK_PRECO = {};
+const MK_NOME  = {};
+const MK_IMG   = {};
+
+document.querySelectorAll('.mk-item').forEach(row => {
+    const id = row.dataset.id;
+    MK_PRECO[id] = row.dataset.preco;
+    MK_NOME[id]  = row.dataset.nome;
+    MK_IMG[id]   = row.dataset.imagem;
+});
+
+function parsePrecoMk(str) {
+    return parseFloat(String(str).replace(',', '.')) || 0;
+}
+
+function formatPrecoMk(val) {
+    return 'R$ ' + val.toFixed(2).replace('.', ',');
+}
+
+function incrementarMk(btn) {
+    const row  = btn.closest('.mk-item');
+    const span = row.querySelector('.mk-qtd');
+    span.textContent = parseInt(span.textContent) + 1;
+    atualizarMk(row);
+}
+
+function decrementarMk(btn) {
+    const row  = btn.closest('.mk-item');
+    const span = row.querySelector('.mk-qtd');
+    if (parseInt(span.textContent) > 0) span.textContent = parseInt(span.textContent) - 1;
+    atualizarMk(row);
+}
+
+function atualizarMk(row) {
+    const id   = row.dataset.id;
+    const qtd  = parseInt(row.querySelector('.mk-qtd').textContent);
+    const preco = parsePrecoMk(MK_PRECO[id]);
+    const sub  = document.getElementById('mk-sub-' + id);
+
+    row.classList.toggle('mk-item-ativo', qtd > 0);
+    sub.textContent = qtd > 0 ? formatPrecoMk(preco * qtd) : '—';
+
+    recalcularTotal();
+}
+
+function recalcularTotal() {
+    let total = 0;
+    let itens = 0;
+
+    document.querySelectorAll('.mk-item').forEach(row => {
+        const qtd   = parseInt(row.querySelector('.mk-qtd').textContent);
+        const preco = parsePrecoMk(MK_PRECO[row.dataset.id]);
+        total += preco * qtd;
+        itens += qtd;
+    });
+
+    document.getElementById('mk-total').textContent = formatPrecoMk(total);
+
+    const label = document.getElementById('mk-itens-label');
+    label.textContent = itens > 0 ? `${itens} item${itens > 1 ? 's' : ''} selecionado${itens > 1 ? 's' : ''}` : '';
+
+    document.getElementById('btn-mk-add').disabled = itens === 0;
+    document.getElementById('mk-barra').classList.toggle('mk-barra-ativa', itens > 0);
+}
+
+function adicionarKitAoCarrinho() {
+    let adicionou = false;
+    document.querySelectorAll('.mk-item').forEach(row => {
+        const id  = row.dataset.id;
+        const qtd = parseInt(row.querySelector('.mk-qtd').textContent);
+        if (qtd > 0) {
+            addToCart(parseInt(id), MK_NOME[id], MK_PRECO[id], MK_IMG[id], qtd);
+            adicionou = true;
+        }
+    });
+
+    if (adicionou) {
+        document.querySelectorAll('.mk-qtd').forEach(el => el.textContent = '0');
+        document.querySelectorAll('.mk-item').forEach(row => {
+            row.classList.remove('mk-item-ativo');
+            document.getElementById('mk-sub-' + row.dataset.id).textContent = '—';
+        });
+        recalcularTotal();
+        window.location.href = '/carrinho';
+    }
+}
+</script>
+{% endblock %}

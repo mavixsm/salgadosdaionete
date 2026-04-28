@@ -1,0 +1,260 @@
+{% extends 'index.html' %}
+
+{% block titulo %}Admin - Cardápio{% endblock %}
+
+{% block conteudo %}
+
+<!-- ── ENDEREÇO DA LOJA ── -->
+<div class="aviso-admin-card">
+    <div class="aviso-admin-titulo">
+        <span>📍</span>
+        <div>
+            <h3>Endereço da Loja</h3>
+            <p class="admin-sub">Usado para calcular automaticamente o frete de entrega</p>
+        </div>
+        {% if config.endereco_loja %}
+            <span class="badge-visivel">Configurado</span>
+        {% else %}
+            <span class="badge-oculto">Não configurado</span>
+        {% endif %}
+    </div>
+    <form method="POST" action="{{ url_for('salvar_configuracao') }}">
+        <div class="form-group" style="margin-bottom:12px">
+            <label for="endereco-loja">Endereço completo</label>
+            <textarea id="endereco-loja" name="endereco_loja" rows="2"
+                placeholder="Ex: Rua das Flores, 123 – Bairro, Cidade – SP">{{ config.endereco_loja }}</textarea>
+        </div>
+        <div style="text-align:right">
+            <button type="submit" class="btn btn-salvar" style="padding:8px 20px">Salvar Endereço</button>
+        </div>
+    </form>
+</div>
+
+<!-- ── AVISO AO CLIENTE ── -->
+<div class="aviso-admin-card">
+    <div class="aviso-admin-titulo">
+        <span>📢</span>
+        <div>
+            <h3>Aviso para os Clientes</h3>
+            <p class="admin-sub">Aparece como popup quando o cliente entra no cardápio</p>
+        </div>
+        <span class="badge-{{ 'visivel' if aviso.ativo else 'oculto' }}">
+            {{ 'Ativo' if aviso.ativo else 'Inativo' }}
+        </span>
+    </div>
+
+    <form method="POST" action="{{ url_for('salvar_aviso') }}">
+        <div class="form-group" style="margin-bottom:12px">
+            <label for="aviso-texto">Mensagem</label>
+            <textarea id="aviso-texto" name="texto" rows="3"
+                placeholder="Ex: Prezados clientes, só irei atender nos dias pares deste mês.">{{ aviso.texto }}</textarea>
+        </div>
+        <div class="aviso-admin-rodape">
+            <div class="form-check" style="margin:0">
+                <input type="checkbox" id="aviso-ativo" name="ativo" {{ 'checked' if aviso.ativo }}>
+                <label for="aviso-ativo">Exibir aviso para clientes</label>
+            </div>
+            <button type="submit" class="btn btn-salvar" style="padding:8px 20px">Salvar Aviso</button>
+        </div>
+    </form>
+</div>
+
+<!-- ── PRODUTOS ── -->
+<div class="admin-header">
+    <h2>Produtos</h2>
+    <a href="{{ url_for('criar_produto') }}" class="btn btn-criar">+ Novo Produto</a>
+</div>
+
+<div class="tabela-wrapper">
+    {% if produtos %}
+    <table>
+        <thead>
+            <tr>
+                <th>Imagem</th>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Preço</th>
+                <th>Estoque</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in produtos %}
+            <tr class="{{ 'oculto' if not p.visivel }}">
+                <td>
+                    {% if p.imagem %}
+                        <img src="{{ url_for('static', filename='uploads/' + p.imagem) }}" class="thumb" alt="{{ p.nome }}">
+                    {% else %}
+                        <div class="sem-imagem">Sem foto</div>
+                    {% endif %}
+                </td>
+                <td>
+                    <strong>{{ p.nome }}</strong>
+                    {% if p.descricao %}
+                        <p class="descricao-mini">{{ p.descricao[:60] }}{% if p.descricao|length > 60 %}...{% endif %}</p>
+                    {% endif %}
+                </td>
+                <td><span class="badge-cat">{{ p.categoria }}</span></td>
+                <td>R$ {{ p.preco }}</td>
+                <td>
+                    {% if p.estoque is none %}
+                        <span class="badge-stock ilimitado">∞</span>
+                    {% elif p.estoque == 0 %}
+                        <span class="badge-stock esgotado">Esgotado</span>
+                    {% elif p.estoque <= 5 %}
+                        <span class="badge-stock baixo">{{ p.estoque }} un.</span>
+                    {% else %}
+                        <span class="badge-stock ok">{{ p.estoque }} un.</span>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('atualizar_estoque', id=p.id) }}"
+                          class="form-estoque-inline">
+                        <input type="number" name="estoque" min="0"
+                               value="{{ p.estoque if p.estoque is not none else '' }}"
+                               placeholder="∞" class="input-estoque">
+                        <button type="submit" class="btn-estoque-save" title="Salvar estoque">✓</button>
+                    </form>
+                </td>
+                <td>
+                    {% if p.visivel %}<span class="badge-visivel">Visível</span>
+                    {% else %}<span class="badge-oculto">Oculto</span>{% endif %}
+                </td>
+                <td class="acoes">
+                    <a href="{{ url_for('editar_produto', id=p.id) }}" class="btn btn-editar">Editar</a>
+                    <form method="POST" action="{{ url_for('toggle_visibilidade', id=p.id) }}" style="display:inline">
+                        <button type="submit" class="btn btn-toggle">{{ 'Ocultar' if p.visivel else 'Mostrar' }}</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('excluir_produto', id=p.id) }}" style="display:inline"
+                          onsubmit="return confirm('Excluir {{ p.nome }}?')">
+                        <button type="submit" class="btn btn-excluir">Excluir</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="vazio">Nenhum produto cadastrado. <a href="{{ url_for('criar_produto') }}">Criar primeiro produto</a></p>
+    {% endif %}
+</div>
+
+<!-- ── KITS ── -->
+<div class="admin-header" style="margin-top: 48px">
+    <div>
+        <h2>Kits</h2>
+        <p class="admin-sub">Monte combos com produtos já cadastrados</p>
+    </div>
+    <a href="{{ url_for('criar_kit') }}" class="btn btn-kit">+ Novo Kit</a>
+</div>
+
+<div class="tabela-wrapper">
+    {% if kits %}
+    <table>
+        <thead>
+            <tr>
+                <th>Imagem</th>
+                <th>Nome do Kit</th>
+                <th>Produtos</th>
+                <th>Preço</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for k in kits %}
+            <tr class="{{ 'oculto' if not k.visivel }}">
+                <td>
+                    {% if k.imagem %}
+                        <img src="{{ url_for('static', filename='uploads/' + k.imagem) }}" class="thumb" alt="{{ k.nome }}">
+                    {% else %}
+                        <div class="sem-imagem">Sem foto</div>
+                    {% endif %}
+                </td>
+                <td>
+                    <strong>{{ k.nome }}</strong>
+                    {% if k.descricao %}
+                        <p class="descricao-mini">{{ k.descricao[:60] }}{% if k.descricao|length > 60 %}...{% endif %}</p>
+                    {% endif %}
+                </td>
+                <td>
+                    <ul class="kit-lista-mini">
+                        {% for item in k.itens %}
+                            <li>{{ item.quantidade }}× {{ item.produto.nome }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td>R$ {{ k.preco }}</td>
+                <td>
+                    {% if k.visivel %}<span class="badge-visivel">Visível</span>
+                    {% else %}<span class="badge-oculto">Oculto</span>{% endif %}
+                </td>
+                <td class="acoes">
+                    <a href="{{ url_for('editar_kit', id=k.id) }}" class="btn btn-editar">Editar</a>
+                    <form method="POST" action="{{ url_for('toggle_visibilidade_kit', id=k.id) }}" style="display:inline">
+                        <button type="submit" class="btn btn-toggle">{{ 'Ocultar' if k.visivel else 'Mostrar' }}</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('excluir_kit', id=k.id) }}" style="display:inline"
+                          onsubmit="return confirm('Excluir o kit {{ k.nome }}?')">
+                        <button type="submit" class="btn btn-excluir">Excluir</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="vazio">Nenhum kit cadastrado ainda. <a href="{{ url_for('criar_kit') }}">Criar primeiro kit</a></p>
+    {% endif %}
+</div>
+
+<!-- ── PEDIDOS RECENTES ── -->
+<div class="admin-header" style="margin-top:48px">
+    <div>
+        <h2>Pedidos Recentes</h2>
+        <p class="admin-sub">Últimos 10 pedidos — atualizado a cada pedido finalizado</p>
+    </div>
+    <a href="{{ url_for('admin_pedidos') }}" class="btn btn-criar">Ver Todos</a>
+</div>
+
+<div class="tabela-wrapper">
+    {% if pedidos %}
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Data/Hora</th>
+                <th>Cliente</th>
+                <th>Tipo</th>
+                <th>Itens</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ped in pedidos %}
+            <tr>
+                <td><span class="badge-cat">#{{ ped.id }}</span></td>
+                <td class="pedido-data">{{ ped.data.strftime('%d/%m %H:%M') }}</td>
+                <td><strong>{{ ped.nome_cliente }}</strong></td>
+                <td>
+                    {% if ped.tipo_entrega == 'entrega' %}
+                        <span class="badge-entrega">🛵 Entrega</span>
+                    {% else %}
+                        <span class="badge-retirada">🏪 Retirada</span>
+                    {% endif %}
+                </td>
+                <td class="pedido-itens">
+                    {% for it in ped.itens %}
+                        <span>{{ it.quantidade }}× {{ it.produto_nome }}</span>{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+                <td><strong class="pedido-total">R$ {{ '%.2f'|format(ped.total)|replace('.', ',') }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="vazio">Nenhum pedido registrado ainda.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

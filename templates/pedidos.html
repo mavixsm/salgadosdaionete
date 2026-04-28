@@ -1,0 +1,71 @@
+{% extends 'index.html' %}
+
+{% block titulo %}Todos os Pedidos{% endblock %}
+
+{% block conteudo %}
+<div class="admin-header">
+    <div>
+        <h2>Todos os Pedidos</h2>
+        <p class="admin-sub">{{ pedidos|length }} pedido{{ 's' if pedidos|length != 1 }} registrado{{ 's' if pedidos|length != 1 }}</p>
+    </div>
+    <a href="{{ url_for('admin') }}" class="btn btn-cancelar">← Voltar</a>
+</div>
+
+<div class="tabela-wrapper">
+    {% if pedidos %}
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Data/Hora</th>
+                <th>Cliente</th>
+                <th>Tipo</th>
+                <th>Endereço</th>
+                <th>Itens</th>
+                <th>Subtotal</th>
+                <th>Frete</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ped in pedidos %}
+            <tr>
+                <td><span class="badge-cat">#{{ ped.id }}</span></td>
+                <td class="pedido-data">{{ ped.data.strftime('%d/%m/%Y %H:%M') }}</td>
+                <td><strong>{{ ped.nome_cliente }}</strong></td>
+                <td>
+                    {% if ped.tipo_entrega == 'entrega' %}
+                        <span class="badge-entrega">🛵 Entrega</span>
+                    {% else %}
+                        <span class="badge-retirada">🏪 Retirada</span>
+                    {% endif %}
+                </td>
+                <td class="pedido-endereco">
+                    {% if ped.endereco %}
+                        {{ ped.endereco }}
+                        {% if ped.cep %}<br><small>CEP: {{ ped.cep }}</small>{% endif %}
+                    {% else %}
+                        <span style="color:#aaa">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <ul class="kit-lista-mini">
+                        {% for it in ped.itens %}
+                            <li>{{ it.quantidade }}× {{ it.produto_nome }}
+                                <small>(R$ {{ '%.2f'|format(it.preco_unit)|replace('.', ',') }} un.)</small>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td>R$ {{ '%.2f'|format(ped.total - ped.frete)|replace('.', ',') }}</td>
+                <td>{% if ped.frete > 0 %}R$ {{ '%.2f'|format(ped.frete)|replace('.', ',') }}{% else %}—{% endif %}</td>
+                <td><strong class="pedido-total">R$ {{ '%.2f'|format(ped.total)|replace('.', ',') }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p class="vazio">Nenhum pedido registrado ainda.</p>
+    {% endif %}
+</div>
+{% endblock %}

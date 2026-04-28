@@ -1,0 +1,126 @@
+{% extends 'index.html' %}
+
+{% block titulo %}Carrinho{% endblock %}
+
+{% block conteudo %}
+<div class="carrinho-header">
+    <h2 class="titulo-pagina">Meu Carrinho</h2>
+    <a href="{{ url_for('cardapio') }}" class="voltar-link">← Continuar comprando</a>
+</div>
+
+<!-- Itens -->
+<div id="carrinho-lista"></div>
+
+<!-- Vazio -->
+<div id="carrinho-vazio" style="display:none">
+    <p class="vazio">Seu carrinho está vazio.</p>
+    <a href="{{ url_for('cardapio') }}" class="btn btn-criar" style="display:inline-block;margin-top:16px">
+        Ver Cardápio
+    </a>
+</div>
+
+<!-- Rodapé com total e botão -->
+<div id="carrinho-rodape" style="display:none">
+    <div class="carrinho-total">
+        <span>Total dos itens</span>
+        <strong id="total-valor">R$ 0,00</strong>
+    </div>
+    <button class="btn btn-whatsapp" onclick="abrirModal()">
+        Finalizar Pedido via WhatsApp
+    </button>
+</div>
+
+<!-- Modal de finalização -->
+<div id="modal-confirmacao" style="display:none">
+    <div class="modal-box modal-pedido">
+        <div class="modal-icone">🛒</div>
+        <h3>Finalizar Pedido</h3>
+        <p>Preencha seus dados para enviarmos pelo WhatsApp.</p>
+
+        <div class="modal-form">
+
+            <!-- Nome -->
+            <div class="modal-field">
+                <label for="pedido-nome">Seu nome *</label>
+                <input type="text" id="pedido-nome" placeholder="Ex: Maria Silva" autocomplete="name">
+            </div>
+
+            <!-- Entrega ou Retirada -->
+            <div class="modal-field">
+                <label>Como deseja receber? *</label>
+                <div class="tipo-entrega-opcoes">
+                    <label class="tipo-opcao" id="opcao-entrega">
+                        <input type="radio" name="tipo_entrega" value="entrega" onchange="alterarTipoEntrega()">
+                        <span class="tipo-opcao-icone">🛵</span>
+                        <span class="tipo-opcao-texto">Entrega</span>
+                    </label>
+                    <label class="tipo-opcao" id="opcao-retirada">
+                        <input type="radio" name="tipo_entrega" value="retirada" onchange="alterarTipoEntrega()">
+                        <span class="tipo-opcao-icone">🏪</span>
+                        <span class="tipo-opcao-texto">Retirada</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Campos de entrega -->
+            <div id="campos-entrega" style="display:none">
+                <div class="modal-field">
+                    <label for="pedido-endereco">Endereço completo *</label>
+                    <textarea id="pedido-endereco" rows="2"
+                        placeholder="Ex: Rua das Flores, 123 – Bairro, Cidade – SP"></textarea>
+                </div>
+                <div class="modal-field">
+                    <label for="pedido-cep">CEP *</label>
+                    <input type="text" id="pedido-cep" maxlength="9"
+                           placeholder="Ex: 07770-000" oninput="formatarCep(this)">
+                </div>
+                <button type="button" class="btn-calc-frete" id="btn-calc-frete"
+                        onclick="calcularFreteAuto()">
+                    📍 Calcular Frete
+                </button>
+                <div class="frete-status" id="frete-status" style="display:none"></div>
+                <div class="frete-preview" id="frete-preview" style="display:none">
+                    <span>Frete estimado:</span>
+                    <strong id="frete-valor">R$ 0,00</strong>
+                    <span class="frete-detalhe" id="frete-detalhe"></span>
+                </div>
+            </div>
+
+            <!-- Aviso de retirada -->
+            <div id="aviso-retirada" style="display:none" class="aviso-retirada-box">
+                <span class="aviso-retirada-icone">⚠️</span>
+                <p>
+                    <strong>Atenção:</strong> Não nos responsabilizamos por qualquer
+                    dano ao produto ao ser transportado por aplicativos como
+                    <strong>Uber</strong> ou <strong>99 Moto</strong>.
+                    O transporte é por conta e risco do cliente.
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Resumo do total com frete -->
+        <div class="modal-resumo" id="modal-resumo" style="display:none">
+            <div class="modal-resumo-linha">
+                <span>Subtotal</span>
+                <span id="resumo-subtotal">R$ 0,00</span>
+            </div>
+            <div class="modal-resumo-linha">
+                <span>Frete</span>
+                <span id="resumo-frete" class="resumo-frete-valor">R$ 0,00</span>
+            </div>
+            <div class="modal-resumo-linha modal-resumo-total">
+                <span>Total</span>
+                <strong id="resumo-total">R$ 0,00</strong>
+            </div>
+        </div>
+
+        <div id="modal-erro" class="modal-erro" style="display:none"></div>
+
+        <div class="modal-acoes">
+            <button class="btn btn-cancelar" onclick="fecharModal()">Cancelar</button>
+            <button class="btn btn-whatsapp" id="btn-confirmar" onclick="confirmarPedido()">Enviar pelo WhatsApp</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

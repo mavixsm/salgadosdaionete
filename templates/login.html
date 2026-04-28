@@ -1,0 +1,26 @@
+{% extends 'index.html' %}
+
+{% block titulo %}Entrar - Admin{% endblock %}
+
+{% block conteudo %}
+<div class="login-wrapper">
+    <div class="login-box">
+        <h2>Área do Admin</h2>
+        <p class="login-sub">Digite a senha para continuar</p>
+
+        {% if erro %}
+            <div class="login-erro">{{ erro }}</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="form-group">
+                <label for="senha">Senha</label>
+                <input type="password" id="senha" name="senha" placeholder="••••••••" autofocus required>
+            </div>
+            <button type="submit" class="btn btn-salvar btn-login">Entrar</button>
+        </form>
+
+        <a href="{{ url_for('cardapio') }}" class="voltar-link">← Voltar ao cardápio</a>
+    </div>
+</div>
+{% endblock %}

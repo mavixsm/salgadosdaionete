@@ -1,0 +1,65 @@
+{% extends 'index.html' %}
+
+{% block titulo %}{{ kit.nome }}{% endblock %}
+
+{% block conteudo %}
+<a href="{{ url_for('cardapio') }}" class="breadcrumb">← Voltar ao Cardápio</a>
+
+<div class="detalhe-wrapper">
+
+    <!-- Imagem -->
+    <div class="detalhe-img-box">
+        {% if kit.imagem %}
+            <img src="{{ url_for('static', filename='uploads/' + kit.imagem) }}"
+                 alt="{{ kit.nome }}" class="detalhe-img">
+        {% else %}
+            <div class="detalhe-sem-img">Sem foto</div>
+        {% endif %}
+    </div>
+
+    <!-- Informações -->
+    <div class="detalhe-info">
+        <span class="badge-kit">Kit Especial</span>
+        <h1 class="detalhe-nome">{{ kit.nome }}</h1>
+
+        {% if kit.descricao %}
+            <p class="detalhe-descricao">{{ kit.descricao }}</p>
+        {% endif %}
+
+        <!-- Composição do kit -->
+        <div class="kit-composicao">
+            <h4>O kit inclui:</h4>
+            <ul>
+                {% for item in kit.itens %}
+                <li>
+                    <span class="kit-comp-qtd">{{ item.quantidade }}×</span>
+                    {{ item.produto.nome }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="detalhe-preco">R$ {{ kit.preco }}</div>
+
+        <!-- Seletor de quantidade -->
+        <div class="detalhe-qtd">
+            <button class="qtd-btn qtd-btn-lg" onclick="decrementarDetalhe()">−</button>
+            <span class="qtd-num qtd-num-lg" id="qtd-detalhe">1</span>
+            <button class="qtd-btn qtd-btn-lg" onclick="incrementarDetalhe()">+</button>
+        </div>
+
+        <!-- Botão adicionar ao carrinho -->
+        <button class="btn-add-detalhe"
+            data-id="k{{ kit.id }}"
+            data-nome="{{ kit.nome }}"
+            data-preco="{{ kit.preco }}"
+            data-imagem="{{ kit.imagem or '' }}"
+            onclick="addToCartDetalhe(this)">
+            🛒 Adicionar ao Carrinho
+        </button>
+
+        <a href="{{ url_for('carrinho') }}" class="link-ver-carrinho">Ver meu carrinho →</a>
+    </div>
+
+</div>
+{% endblock %}
