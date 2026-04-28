@@ -114,9 +114,17 @@ def get_configuracao():
     return cfg
 
 
-with app.app_context():
+os.makedirs(os.path.join('static', 'uploads'), exist_ok=True)
+
+_db_initialized = False
+
+@app.before_request
+def init_db():
+    global _db_initialized
+    if _db_initialized:
+        return
+    _db_initialized = True
     db.create_all()
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     get_aviso()
     get_configuracao()
     try:
