@@ -117,12 +117,14 @@ with app.app_context():
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     get_aviso()
     get_configuracao()
-    # Migração: adiciona coluna estoque se ainda não existir
-    insp = inspect(db.engine)
-    if 'estoque' not in [c['name'] for c in insp.get_columns('produto')]:
-        with db.engine.connect() as conn:
-            conn.execute(text('ALTER TABLE produto ADD COLUMN estoque INTEGER'))
-            conn.commit()
+    try:
+        insp = inspect(db.engine)
+        if 'estoque' not in [c['name'] for c in insp.get_columns('produto')]:
+            with db.engine.connect() as conn:
+                conn.execute(text('ALTER TABLE produto ADD COLUMN estoque INTEGER'))
+                conn.commit()
+    except Exception:
+        pass
 
 
 # ── HELPERS ───────────────────────────────────────────────
