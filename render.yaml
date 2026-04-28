@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: site-cardapio
-    runtime: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --capture-output --log-level debug
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
